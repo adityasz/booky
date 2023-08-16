@@ -1,85 +1,75 @@
+This is a fork of [booky](https://github.com/SiddharthPant/booky) with additional functionality.
+<hr>
+
 # booky
 
-This script creates bookmarks of a pdf from a simple text file. The tool `pdftk` can already do this in fact
-internally I am using that tool itself. But `pdftk` requires a format which is too tedious to write. So I have written
-this script to enter bookmarks data in a simple format.
+This script creates bookmarks in a pdf from a simple text file using `pdftk`.
 
 ## Dependencies
-* bash
-* python3
-* pdftk
-* dirname
-* basename
-* GNU sed (OSX users take note, you may have BSD sed. Install `gsed` instead)
+- python3
+- pdftk
+- GNU sed (OSX may have BSD sed; install `gsed` instead)
 
 ## Bookmark format
-* Every level starts with a `{` on a _separate line_.
-* Bookmarks have title with page number separated by comma.
-* Both title and page number should be on the same line.
-* All these are equivalent (i.e. the script is whitespace agnostic).
+- A level starts with a `{` and ends with a `}`, on lines of their own.
+- Bookmark title and page numbers must be on the same line, separted by a
+  comma.
+- The following lines are equivalent (the script is whitespace-agnostic):
   ```
   title1, 1
-  title1,             1
-        title1     ,         1
+  title1  ,     1
+  ```
+- If the page numbers of the pdf are offset from the page numbers in the table
+  of contents by an amount $n$, add `!n` on a new line. Multiple offsets can
+  be specified since it is checked on each line. Negative offsets can also be
+  specified.
+
+## Example
+```
+{
+	Contents, 4
+	!15
+	Chapter 1, 7
+	Chapter 2, 10
+	{
+		Section 2.1, 11
+		Section 2.2, 12
+		{
+			!14
+			Subsection 2.2.1, 13
+			...
+		}
+	}
+}
+```
+
+## Usage
+- `./booky.sh doc.pdf bookmarks.txt` creates a new pdf file
+  `doc_bookmarked.pdf` with bookmarks from `bookmarks.txt`.
+
+- To run it from any directory, add the `booky` directory to the environment PATH
+
+  ```
+  export PATH=/path_to_booky:$PATH
   ```
 
-  ### Example
-  ```
-  {
-    Title1, 1
-    Title2, 2
-    {
-      Subtitle1, 3
-      Subtitle2, 4
-      {
-        SubSubtitle1, 5
-        ...
-      }
-    }
-  }
-  ```
-
-## How To Use it?
-* First clone this repository and change your directory. Execute this in a terminal
-
-  ```
-  git clone https://github.com/SiddharthPant/booky.git
-  cd booky
-  ```
-* Now copy your pdf file to this directory
-* Create a new text file and write your bookmarks in the given format
-* Now your directory should contain 4 files: `booky.sh`, `booky.py`, `your_pdf_file.pdf`, `your_text_file.txt`
-* Write the following commands in the terminal
-
-  ```
-  ./booky.sh your_pdf_file.pdf your_text_file.txt
-  ```
-
-If you add the `booky` directory to the environment PATH like:
-```
-export PATH=/path_to_the_booky:$PATH
-```
-then it can run from any directory:
-```
-  booky.sh your_pdf_file.pdf your_text_file.txt
+### Windows
+On a Windows machine, use the `booky.py` file in the repo to convert
+`bookmarks.txt` to `pdftk` compatible format:
 
 ```
+python3 booky.py < bookmarks.txt > output.txt
+```
 
-This creats a new pdf file `your_pdf_file_new.pdf` with your bookmarks.
-
-This is going to work in POSIX systems, but if instead you are on a Windows machine. Then first install `python3` and `pdftk` just use the `booky.py` file in the repo to convert `bkmrks.txt` to `pdftk` compatible format
-
-    python3 booky.py < bkmrks.txt > output.txt
-
-use the export command to generate a dumped data file.
+Use the export command to generate a dumped data file:
 
 ```
-pdftk C:\Users\Sid\Desktop\doc.pdf dump_data output C:\Users\Sid\Desktop\doc_data.txt
+pdftk doc.pdf dump_data output doc_data.txt
 ```
-Remove the previous bookmarks from that file and insert content of `output.txt` instead using a simple copy & paste.
-And then import that data back.
+
+Replace the old bookmarks in `doc_data.txt` with the contents of `output.txt`
+and then import that data back:
 
 ```
-pdftk C:\Users\Sid\Desktop\doc.pdf update_info C:\Users\Sid\Desktop\doc_data.txt output C:\Users\Sid\Desktop\updated.pdf
+pdftk doc.pdf update_info doc_data.txt output updated.pdf
 ```
-If this does not update your bookmarks check that your `pdftk` version is greater than 1.45

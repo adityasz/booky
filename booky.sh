@@ -15,20 +15,20 @@ else
     SED=sed
 fi
 
-echo "Converting $bkFile to pdftk compatible format"
+echo "Converting $bkFile to pdftk compatible format..."
 python3 $SCRIPT_DIR/booky.py < "$bkFile" > "$EXTRACT_FILE"
 
 echo "Dumping pdf meta data..."
 pdftk "$pdf" dump_data_utf8 output "$pdf_data"
 
-echo "Clear dumped data of any previous bookmarks"
+echo "Clear dumped data of any previous bookmarks..."
 $SED -i '/Bookmark/d' "$pdf_data"
 
-echo "Inserting your bookmarks in the data"
+echo "Inserting your bookmarks in the data..."
 $SED -i "/NumberOfPages/r $EXTRACT_FILE" "$pdf_data"
 
 echo "Creating new pdf with your bookmarks..."
-pdftk "$pdf" update_info_utf8 "$pdf_data" output "${pdf%.*}""_new.pdf"
+pdftk "$pdf" update_info_utf8 "$pdf_data" output "${pdf%.*}""_bookmarked.pdf"
 
-echo "Deleting leftovers"
+echo "Deleting leftovers..."
 rm "$EXTRACT_FILE" "$pdf_data"
